@@ -1,103 +1,270 @@
+"use client";
+
 import Image from "next/image";
+import { Poppins } from "next/font/google";
+import {
+  BellRing,
+  Menu,
+  PenLine,
+  PhoneOutgoing,
+  SearchSlash,
+  ShieldUser,
+  ShoppingBasket,
+  SquareUser,
+  Star,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+import { useRouter } from "next/navigation";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal"],
+  display: "swap",
+});
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [show, setShow] = useState(false);
+  const [showM, setShowM] = useState(false);
+  const [showP, setShowP] = useState(false);
+  const [showS, setShowS] = useState(false);
+  const router = useRouter();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.push("/");
+      } else {
+        router.push("Signin");
+      }
+    });
+  });
+
+  return (
+    <div
+      className={`${poppins.className} bg-neutral-800 min-h-screen text-gray-400 p-1 cursor-default select-none`}
+    >
+      <div>
+        <div className="border-b border-gray-400">
+          <div className="lg:flex hidden flex-row items-center justify-between">
+            <div className="flex flex-row gap-4 m-2 ml-7">
+              <div className="flex flex-col items-center">
+                <div
+                  className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
+                  onMouseEnter={() => setShow(!show)}
+                >
+                  Contact <PhoneOutgoing size={15} />
+                </div>
+                <div onMouseLeave={() => setShow(!show)}>
+                  {show && (
+                    <div className="absolute  left-5 top-10 w-45 h-20 z-50 flex flex-col items-center rounded-md bg-neutral-700">
+                      <div className="mt-2 flex flex-row items-center gap-2">
+                        Conact Number <ShieldUser size={20} />
+                      </div>
+                      <a href="https://wa.me/381645624181" target="_blank">
+                        <div className="mt-3 hover:underline">
+                          +381 64 5624 181
+                        </div>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <a href="https://discord.gg/BcRP8UgCyK" target="_blank">
+                <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                  Support <PenLine size={15} />
+                </div>
+              </a>
+            </div>
+            <div className="flex flex-row gap-5 items-center mr-7">
+              <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                <div>Rating</div>
+                <Star size={15} />
+              </div>
+              <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                <div>Updates</div>
+                <BellRing size={15} />
+              </div>
+            </div>
+          </div>
+          <div className="flex lg:hidden">
+            {showM ? (
+              <div>
+                <X size={20} onClick={() => setShowM(!showM)} className="m-5" />
+              </div>
+            ) : (
+              <div>
+                <Menu
+                  size={20}
+                  onClick={() => setShowM(!showM)}
+                  className="m-5"
+                />
+              </div>
+            )}
+            {showM && (
+              <div className="flex flex-row items-center justify-between w-full">
+                <div className="flex flex-row gap-4 m-1">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
+                      onMouseEnter={() => setShow(!show)}
+                    >
+                      Contact <PhoneOutgoing size={15} />
+                    </div>
+                    <div onMouseLeave={() => setShow(!show)}>
+                      {show && (
+                        <div className="absolute  left-10 top-12 w-45 h-20 z-50 flex flex-col items-center rounded-md bg-neutral-700">
+                          <div className="mt-2 flex flex-row items-center gap-2">
+                            Conact Number <ShieldUser size={20} />
+                          </div>
+                          <a href="https://wa.me/381645624181" target="_blank">
+                            <div className="mt-3 hover:underline">
+                              +381 64 5624 181
+                            </div>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <a href="https://discord.gg/H5dUpbchCb" target="_blank">
+                    <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                      Support <PenLine size={15} />
+                    </div>
+                  </a>
+                </div>
+                <div className="flex flex-row gap-5 items-center mr-7">
+                  <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                    <div className="sm:flex hidden">Rating</div>
+                    <Star size={15} />
+                  </div>
+                  <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                    <div className="sm:flex hidden">Updates</div>
+                    <BellRing size={15} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex lg:flex-row flex-col items-center justify-between">
+            <div className="flex flex-row items-center justify-between w-full lg:w-50">
+              <div className="text-2xl m-4 animate-caret-blink ml-7">
+                Instant <span className="text-blue-400">App</span>
+              </div>
+              <div className="flex lg:hidden flex-row items-center gap-5">
+                <div className="flex flex-col items-center gap-2">
+                  <AnimatePresence>
+                    {showP && (
+                      <motion.div
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ x: 20, opacity: 0 }}
+                        className="absolute top-8 text-blue-400"
+                      >
+                        Profile
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <a href="/Profiles">
+                    <Button
+                      variant="ghost"
+                      onMouseEnter={() => setShowP(!showP)}
+                      onMouseLeave={() => setShowP(!showP)}
+                    >
+                      <SquareUser />
+                    </Button>
+                  </a>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <AnimatePresence>
+                    {showS && (
+                      <motion.div
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ x: -20, opacity: 0 }}
+                        className="absolute top-8 right-6 text-blue-400"
+                      >
+                        Cart
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <a href="/Cart">
+                    <Button
+                      variant="ghost"
+                      className="mr-4"
+                      onMouseEnter={() => setShowS(!showS)}
+                      onMouseLeave={() => setShowS(!showS)}
+                    >
+                      <ShoppingBasket />
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="flex flex-row items-center">
+                <div className="border-3 border-neutral-600 h-9 w-10 lg:mb-0 mb-4 flex items-center justify-center rounded-l-md hover:bg-neutral-600 hover:scale-115 hover:shadow-md hover:shadow-neutral-600 transition-all">
+                  <SearchSlash size={20} />
+                </div>
+                <input className="outline-0 border-3 border-neutral-600 rounded-r-md xl:w-[800px] lg:w-[650px] md:w-[550px] sm:w-[450px] w-[350px] lg:mb-0 mb-4 h-9 text-sm indent-1 focus:borer-b-3 focus:border-b-blue-400 focus:ring-blue-400 transition-all" />
+              </div>
+            </div>
+            <div className="hidden lg:flex flex-row items-center gap-5">
+              <div className="flex flex-col items-center gap-2">
+                <AnimatePresence>
+                  {showP && (
+                    <motion.div
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ x: 20, opacity: 0 }}
+                      className="absolute top-8 text-blue-400"
+                    >
+                      Profile
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <a href="/Profiles">
+                  <Button
+                    variant="ghost"
+                    onMouseEnter={() => setShowP(!showP)}
+                    onMouseLeave={() => setShowP(!showP)}
+                  >
+                    <SquareUser />
+                  </Button>
+                </a>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <AnimatePresence>
+                  {showS && (
+                    <motion.div
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="absolute top-8 right-6 text-blue-400"
+                    >
+                      Cart
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <a href="/Cart">
+                  <Button
+                    variant="ghost"
+                    className="mr-4"
+                    onMouseEnter={() => setShowS(!showS)}
+                    onMouseLeave={() => setShowS(!showS)}
+                  >
+                    <ShoppingBasket />
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
