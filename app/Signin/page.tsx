@@ -6,15 +6,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import google from "./Images/google.png";
 import github from "./Images/github.png";
-import { signInWithEmailAndPassword } from "firebase/auth/cordova";
-import { auth } from "../firebaseConfig";
-import {
-  GithubAuthProvider,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-} from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+import { supabase } from "../supabaseClient";
+import { getRouteRegex } from "next/dist/shared/lib/router/utils/route-regex";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -57,34 +51,45 @@ export default function SignIn() {
     if (!valid) return;
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("Email", email);
-      console.log("Password", password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) console.log(error);
+      return data;
     } catch (error) {
-      console.log("Error is here:", error);
+      console.log(error);
     }
   }
 
   async function GoogleLogin() {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
+    if (error) console.log(error);
+    return data;
   }
 
   async function GithubLogin() {
-    const provider = new GithubAuthProvider();
-    signInWithPopup(auth, provider);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+    });
+    if (error) console.log(error);
+    return data;
   }
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
         router.push("/");
       } else {
-        router.push("Signin");
+        router.push("/Signin");
       }
-    });
-  });
-
+    })();
+  }, []);
   return (
     <div
       className={`${poppins.className} bg-neutral-800 min-h-screen text-gray-400 cursor-default select-none`}
@@ -96,7 +101,7 @@ export default function SignIn() {
             <div>Community</div>
           </div>
           <div className="text-2xl text-center mt-3 animate-bounce">SignIn</div>
-          <div className="text-center">Welcome, What's Up!</div>
+          <div className="text-center">Welcome Back, What's Up!</div>
           <div className="border-t border-gray-300 mt-5" />
           <div className="mt-10">
             <div className="flex flex-col gap-2">

@@ -12,14 +12,14 @@ import {
   ShoppingBasket,
   SquareUser,
   Star,
+  User,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebaseConfig";
 import { useRouter } from "next/navigation";
+import { supabase } from "./supabaseClient";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -27,22 +27,70 @@ const poppins = Poppins({
   style: ["normal"],
   display: "swap",
 });
+interface Product {
+  id: number;
+  Name: string;
+  Price: number;
+  Description: string;
+  Stock: number;
+  Image_Url: string;
+  GitHub_Url: string;
+}
 
 export default function Home() {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [show, setShow] = useState(false);
   const [showM, setShowM] = useState(false);
   const [showP, setShowP] = useState(false);
   const [showS, setShowS] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
   const router = useRouter();
 
+  function convertImgurUrl(url: string): string {
+    if (
+      url.startsWith("https://imgur.com/") &&
+      url.length > "https://imgur.com/".length
+    ) {
+      const code = url.substring("https://imgur.com/".length);
+      return `https://i.imgur.com/${code}.jpeg`;
+    }
+    return url;
+  }
+
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
         router.push("/");
       } else {
-        router.push("Signin");
+        router.push("/Signin");
       }
-    });
+    })();
+  }, []);
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      }
+    })();
+  }, []);
+  useEffect(() => {
+    const ProductsView = async () => {
+      const { data, error } = await supabase
+        .from("Products")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) console.log(error);
+      if (data) setProducts(data);
+    };
+
+    ProductsView();
   });
 
   return (
@@ -90,6 +138,15 @@ export default function Home() {
                 <div>Updates</div>
                 <BellRing size={15} />
               </div>
+              {userEmail === "akidimke136@gmail.com" && (
+                <div
+                  onClick={() => router.push("admin-panel")}
+                  className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
+                >
+                  <div className="sm:flex hidden">Admin</div>
+                  <User size={15} />
+                </div>
+              )}
             </div>
           </div>
           <div className="flex lg:hidden">
@@ -146,6 +203,15 @@ export default function Home() {
                     <div className="sm:flex hidden">Updates</div>
                     <BellRing size={15} />
                   </div>
+                  {userEmail === "akidimke136@gmail.com" && (
+                    <div
+                      onClick={() => router.push("admin-panel")}
+                      className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
+                    >
+                      <div className="sm:flex hidden">Admin</div>
+                      <User size={15} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -264,6 +330,23 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+      <div>
+        {products.map((product, index) => (
+          <div key={index}>
+            <div>
+              <Image
+                src={convertImgurUrl(product.Image_Url)}
+                alt=""
+                width={50}
+                height={50}
+              />
+              <div>{product.Name}</div>
+              <div>{product.Price}</div>
+              <div>{product.Stock}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

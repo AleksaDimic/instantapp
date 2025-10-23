@@ -2,6 +2,9 @@
 import { House, Trash } from "lucide-react";
 import { Poppins } from "next/font/google";
 import Link from "next/link";
+import { supabase } from "../supabaseClient";
+import { redirect, useRouter } from "next/navigation";
+import { useEffect } from "react";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -9,6 +12,20 @@ const poppins = Poppins({
   display: "swap",
 });
 export default function Cart() {
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        router.push("/Cart");
+      } else {
+        router.push("/Signin");
+      }
+    })();
+  }, []);
   return (
     <div
       className={`${poppins.className} bg-neutral-800 min-h-screen text-gray-400 cursor-default select-none`}

@@ -6,18 +6,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import google from "../Signin/Images/google.png";
 import github from "../Signin/Images/github.png";
-import { auth } from "../firebaseConfig";
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  updateProfile,
-  sendEmailVerification,
-  GoogleAuthProvider,
-  signInWithPopup,
-  GithubAuthProvider,
-} from "firebase/auth";
-import { useRouter } from "next/navigation";
-import { send } from "process";
+import { supabase } from "../supabaseClient";
+import { redirect, useRouter } from "next/navigation";
+import { getDisplayName } from "next/dist/shared/lib/utils";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -69,38 +60,53 @@ export default function SignIn() {
     if (!valid) return;
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password
-      );
-
-      const user = userCredential.user;
-      await updateProfile(user, {
-        displayName: name,
+        password,
+        options: {
+          data: {
+            displayName: name,
+          },
+        },
       });
-      if (user.emailVerified) {
-        console.log("Email Verified!");
-        router.push("/");
-      } else {
-        await sendEmailVerification(user);
-        alert("Please Verify Email!");
+      if (error) {
+        console.error(error);
+      } else if (data.user) {
+        router.push("/Verify");
       }
     } catch (error) {
-      console.log("Error is here:", error);
+      console.log(error);
     }
   }
 
   async function GoogleLogin() {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
+    if (error) console.log(error);
+    return data;
   }
 
   async function GithubLogin() {
-    const provider = new GithubAuthProvider();
-    signInWithPopup(auth, provider);
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+    });
+    if (error) console.log(error);
+    return data;
   }
 
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        router.push("/");
+      } else {
+        router.push("/Register");
+      }
+    })();
+  }, []);
   return (
     <div
       className={`${poppins.className} bg-neutral-800 min-h-screen text-gray-400 cursor-default select-none`}
@@ -111,7 +117,9 @@ export default function SignIn() {
             <div>InstantApp</div>
             <div>Community</div>
           </div>
-          <div className="text-2xl text-center mt-3 animate-bounce">SignIn</div>
+          <div className="text-2xl text-center mt-3 animate-bounce">
+            Register
+          </div>
           <div className="text-center">Welcome, What's Up!</div>
           <div className="border-t border-gray-300 mt-5" />
           <div className="mt-10">
