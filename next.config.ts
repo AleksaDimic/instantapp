@@ -1,34 +1,30 @@
 import type { NextConfig } from "next";
 
-const NextConfig = {
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
-        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "i.imgur.com",
-        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "imgur.com",
-        port: "",
         pathname: "/**",
       },
-    ],
-    domains: [
-      "avatars.githubusercontent.com",
-      "lh3.googleusercontent.com",
-      "i.imgur.com",
-      "imgur.com",
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 };
 
-export default NextConfig;
+export default nextConfig;
