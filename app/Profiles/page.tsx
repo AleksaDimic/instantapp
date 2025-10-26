@@ -5,6 +5,7 @@ import {
   BadgeEuro,
   Bell,
   Copyright,
+  CornerUpLeft,
   House,
   LogOut,
   Menu,
@@ -27,6 +28,26 @@ const poppins = Poppins({
   style: ["normal"],
   display: "swap",
 });
+interface SaveItems {
+  id: number;
+  products_id: number;
+  SavesProducts: number;
+}
+interface likedItems {
+  id: number;
+  products_id: number;
+  LikedProduct: number;
+}
+interface FavItems {
+  id: number;
+  products_id: number;
+  FavoriteProducts: number;
+}
+interface Ratings {
+  id: number;
+  user_id: string;
+  rating: number;
+}
 export default function Profile() {
   const [show, setShow] = useState(false);
   const [show1, setShow1] = useState(false);
@@ -36,6 +57,10 @@ export default function Profile() {
   const [changusername, setChangeUsername] = useState("");
   const [errshow2, setErrShow2] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [savedCount, setSavedCount] = useState<number>(0);
+  const [likedCount, setLikedCount] = useState<number>(0);
+  const [favCount, setFavCount] = useState<number>(0);
+  const [ratings, setRating] = useState<Ratings[]>([]);
   const router = useRouter();
   const lastLoginDate = user?.last_sign_in_at
     ? new Date(user.last_sign_in_at).toLocaleDateString("en-CA")
@@ -63,6 +88,79 @@ export default function Profile() {
 
     GetUser();
   }, []);
+  useEffect(() => {
+    const getSave = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("SaveProducts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("SavesProducts", { ascending: false });
+
+      if (error) console.log(error);
+      if (data) {
+        const uniqueProducts = Array.from(
+          new Map(data.map((p: SaveItems) => [p.products_id, p])).values()
+        );
+        setSavedCount(uniqueProducts.length);
+      }
+    };
+    getSave();
+  }, [user]);
+  useEffect(() => {
+    const getSave = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("LikedProducts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("LikedProduct", { ascending: false });
+
+      if (error) console.log(error);
+      if (data) {
+        const uniqueProducts = Array.from(
+          new Map(data.map((p: likedItems) => [p.products_id, p])).values()
+        );
+        setLikedCount(uniqueProducts.length);
+      }
+    };
+    getSave();
+  }, [user]);
+  useEffect(() => {
+    const getSave = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("FavoriteProducts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("FavoriteProducts", { ascending: false });
+
+      if (error) console.log(error);
+      if (data) {
+        const uniqueProducts = Array.from(
+          new Map(data.map((p: FavItems) => [p.products_id, p])).values()
+        );
+        setFavCount(uniqueProducts.length);
+      }
+    };
+    getSave();
+  }, [user]);
+  useEffect(() => {
+    const getRating = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("Ratings")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.log(error);
+      } else {
+        setRating(data);
+      }
+    };
+    getRating();
+  }, [user]);
 
   async function ChangeEmail(e: any) {
     if (e.key === "Enter") {
@@ -119,21 +217,20 @@ export default function Profile() {
     >
       <div className="flex flex-col items-center justify-center">
         <div className="flex justify-between items-center w-full px-6 py-4 border-b border-neutral-700 shadow-lg shadow-neutral-900 bg-neutral-900">
-          <div className="text-2xl font-semibold text-white tracking-wide">
-            Profile
-          </div>
-
           <Link href="/" className="cursor-default">
             <div
               className="border border-green-500 bg-green-500 text-white font-medium px-4 py-2 rounded-lg flex flex-row gap-2 items-center 
       hover:bg-green-600 hover:border-green-600 hover:shadow-lg hover:shadow-green-500/40 
       hover:scale-105 active:scale-95 transition-all duration-200"
             >
-              Home <House size={18} />
+              <CornerUpLeft size={18} />
+              Home
             </div>
           </Link>
+          <div className="text-2xl font-semibold text-white tracking-wide">
+            Profile
+          </div>
         </div>
-
         <div>
           <div className="border-1 border-neutral-600  md:w-[700px] sm:w-[500px] w-[300px] rounded-lg mt-10 shadow-lg shadow-neutral-600 hover:scale-105 transition-all">
             <div className="text-center text-2xl mt-5">Account Overview</div>
@@ -275,20 +372,22 @@ export default function Profile() {
               <div className="flex md:flex-row flex-col items-center justify-around">
                 <div className="border-1 border-neutral-600 p-1 rounded-lg shadow-lg shadow-neutral-600 m-5 hover:scale-110 transition-all">
                   <div className="text-xl m-3">Saved Items</div>
-                  <div className="text-center text-lg font-bold m-4">
-                    {"Here Text"}
+                  <div className="flex items-center justify-center">
+                    <div className="text-center text-lg font-bold m-4">
+                      {savedCount}
+                    </div>
                   </div>
                 </div>
                 <div className="border-1 border-neutral-600 p-1 rounded-lg shadow-lg shadow-neutral-600 m-5 hover:scale-110 transition-all">
                   <div className="text-xl m-3">Liked Items</div>
                   <div className="text-center text-lg font-bold m-4">
-                    {"Here Text"}
+                    {likedCount}
                   </div>
                 </div>
                 <div className="border-1 border-neutral-600 p-1 rounded-lg shadow-lg shadow-neutral-600 m-5 hover:scale-110 transition-all">
                   <div className="text-xl m-3">Favorite Items</div>
                   <div className="text-center text-lg font-bold m-4">
-                    {"Here Text"}
+                    {favCount}
                   </div>
                 </div>
               </div>
@@ -297,7 +396,7 @@ export default function Profile() {
                 <div className="bg-neutral-700 rounded-full h-3 w-full">
                   <div
                     className="bg-blue-500 h-3 rounded-full transition-all"
-                    style={{ width: `${(1 / 5) * 100}%` }}
+                    style={{ width: `${(savedCount / 5) * 100}%` }}
                   ></div>
                 </div>
               </div>
@@ -307,7 +406,14 @@ export default function Profile() {
               <div className="flex flex-col gap-2">
                 <div>Last Login: {lastLoginDate}</div>
                 <div>Login Method: {user?.app_metadata?.provider}</div>
-                <div>Rating Level: {"⭐️⭐️⭐️⭐️"}</div>
+                <div className="flex flex-row gap-2">
+                  Rating Level:{" "}
+                  {ratings.map((rating) => (
+                    <div key={rating.id}>
+                      <div>{rating.rating}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

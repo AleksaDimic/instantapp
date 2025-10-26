@@ -4,6 +4,9 @@ import Image from "next/image";
 import { Poppins } from "next/font/google";
 import {
   BellRing,
+  Check,
+  ChevronsUpDown,
+  CornerUpLeft,
   House,
   Menu,
   Pen,
@@ -24,7 +27,20 @@ import { onAuthStateChanged } from "firebase/auth";
 import { redirect, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../supabaseClient";
-import { desc } from "framer-motion/client";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -40,7 +56,18 @@ interface Product {
   Stock: number;
   Image_Url: string;
   GitHub_Url: string;
+  platform: string;
 }
+const frameworks = [
+  {
+    value: "Android",
+    label: "Android",
+  },
+  {
+    value: "Apple",
+    label: "IOS",
+  },
+];
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -52,11 +79,13 @@ export default function Home() {
   const [stock, setStock] = useState("");
   const [errstock, setErrStock] = useState("");
   const [image, setImage] = useState("");
-  const [images, setImages] = useState([]);
   const [errimage, setErrImage] = useState("");
   const [githublinks, setGitHubLink] = useState("");
   const [errgithublinks, setErrGitHubLink] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const [errvalue, setErrValue] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -103,7 +132,7 @@ export default function Home() {
     if (description === "") {
       setErrDescription("Enter Description!");
       valid = false;
-    } else if (description.length <= 250) {
+    } else if (description.length <= 100) {
       setErrDescription("Description must be at most 250 characters!");
       valid = false;
     } else {
@@ -112,7 +141,7 @@ export default function Home() {
     }
 
     if (stock === "") {
-      setErrStock("Enter Price!");
+      setErrStock("Enter Stock!");
       valid = false;
     } else if (!Number(stock)) {
       setErrStock("Enter Valid Stock!");
@@ -137,6 +166,13 @@ export default function Home() {
       setErrGitHubLink("");
       valid = true;
     }
+    if (value === "") {
+      setErrValue("Enter Platform!");
+      valid = false;
+    } else {
+      setErrValue("");
+      valid = true;
+    }
 
     if (!valid) return;
 
@@ -150,6 +186,7 @@ export default function Home() {
           Stock: stock,
           Image_Url: image,
           GitHub_Url: githublinks,
+          platform: value,
         })
         .select();
       console.log(data);
@@ -160,6 +197,7 @@ export default function Home() {
       setStock("");
       setImage("");
       setGitHubLink("");
+      setValue("");
     } catch (error) {
       console.log(error);
     }
@@ -211,16 +249,17 @@ export default function Home() {
     >
       <div>
         <div className="flex flex-row items-center justify-between border-b-1 border-neutral-400">
-          <div className="text-2xl m-5">Admin Panel</div>
           <Link href="/" className="cursor-default m-5">
             <div
               className="border border-green-500 bg-green-500 text-white font-medium px-4 py-2 rounded-lg flex flex-row gap-2 items-center 
       hover:bg-green-600 hover:border-green-600 hover:shadow-lg hover:shadow-green-500/40 
       hover:scale-105 active:scale-95 transition-all duration-200"
             >
-              Home <House size={18} />
+              <CornerUpLeft size={18} />
+              Home
             </div>
           </Link>
+          <div className="text-2xl m-5">Admin Panel</div>
         </div>
         <div className="text-2xl m-15">Add Products</div>
         <div className="flex lg:flex-row flex-col">
@@ -305,6 +344,71 @@ export default function Home() {
                 <div className="text-red-500 ml-15">{errgithublinks}</div>
               )}
             </div>
+            <div className="m-5">
+              <div>
+                {" "}
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-[300px] justify-between bg-neutral-600 ml-10"
+                    >
+                      {value
+                        ? frameworks.find(
+                            (framework) => framework.value === value
+                          )?.label
+                        : "Select platform..."}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search platform..."
+                        className="h-9"
+                      />
+                      <CommandList>
+                        <CommandEmpty>No platform found.</CommandEmpty>
+                        <CommandGroup>
+                          {frameworks.map((framework) => (
+                            <CommandItem
+                              key={framework.value}
+                              value={framework.value}
+                              onSelect={(currentValue) => {
+                                setValue(
+                                  currentValue === value ? "" : currentValue
+                                );
+                                setOpen(false);
+                              }}
+                              className={`${
+                                errvalue
+                                  ? "border-red-500"
+                                  : "border-neutral-600"
+                              } outline-0 border  md:w-[500px] w-[300px]  h-10 rounded-lg text-sm indent-2 ml-15`}
+                            >
+                              {framework.label}
+                              <Check
+                                className={cn(
+                                  "ml-auto",
+                                  value === framework.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {errvalue && (
+                  <div className="ml-10 text-red-500">{errvalue}</div>
+                )}
+              </div>
+            </div>
             <div>
               <Button onClick={AddProducts} variant="ghost" className="m-10">
                 Add Products
@@ -312,29 +416,30 @@ export default function Home() {
             </div>
           </div>
           <div>
-            <div>
+            <div className="grid grid-cols-2 m-5">
               {products.map((product, index) => (
-                <div key={index} className="grid grid-cols-3">
-                  <div className="border-1 border-neutral-600 flex flex-col items-center p-2 rounded-lg w-[300px] h-[220px] m-15">
+                <div key={index} className="">
+                  <div className="border-1 border-neutral-600 flex flex-col items-center p-2 rounded-lg  m-15">
                     <Image
                       src={convertImgurUrl(product.Image_Url)}
                       alt=""
                       width={50}
                       height={50}
+                      className="rounded-md"
                     />
                     <div className="text-lg m-5">{product.Name}</div>
                     <div className="flex flex-row gap-5">
                       <div>Price: {product.Price}</div>
                       <div>Stock: {product.Stock}</div>
                     </div>
-                    <div className="flex flex-row gap-5">
+                    <div className="flex flex-row gap-5 m-5">
                       <button
                         onClick={() => DeleteDoc(product.id)}
-                        className="border-1 border-red-500 p-3 rounded-lg hover:bg-red-500 hover:text-white transition-all relative top-5"
+                        className="border-1 border-red-500 p-3 rounded-lg hover:bg-red-500 hover:text-white transition-all"
                       >
                         <Trash size={15} />
                       </button>
-                      <button className="border-1 border-blue-500 p-3 rounded-lg hover:bg-blue-500 hover:text-black transition-all relative top-5">
+                      <button className="border-1 border-blue-500 p-3 rounded-lg hover:bg-blue-500 hover:text-black transition-all">
                         <Pen size={15} />
                       </button>
                     </div>

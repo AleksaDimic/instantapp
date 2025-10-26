@@ -3,15 +3,28 @@
 import Image from "next/image";
 import { Poppins } from "next/font/google";
 import {
+  ActivityIcon,
+  Apple,
   BellRing,
+  BookOpen,
+  Camera,
+  Clipboard,
+  Cpu,
+  CreditCard,
+  Film,
+  MapPin,
   Menu,
+  MessageCircle,
+  Newspaper,
   PenLine,
   PhoneOutgoing,
   SearchSlash,
   ShieldUser,
+  ShoppingBag,
   ShoppingBasket,
   SquareUser,
   Star,
+  StarHalf,
   User,
   X,
 } from "lucide-react";
@@ -20,6 +33,21 @@ import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { supabase } from "./supabaseClient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,6 +63,12 @@ interface Product {
   Stock: number;
   Image_Url: string;
   GitHub_Url: string;
+  platform: string;
+}
+interface Ratings {
+  id: number;
+  user_id: string;
+  rating: number;
 }
 
 export default function Home() {
@@ -43,19 +77,14 @@ export default function Home() {
   const [showM, setShowM] = useState(false);
   const [showP, setShowP] = useState(false);
   const [showS, setShowS] = useState(false);
+  const [query, setQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
-  const router = useRouter();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [ratings, setRating] = useState<Ratings[]>([]);
+  const [user, setUser] = useState<any>(null);
 
-  function convertImgurUrl(url: string): string {
-    if (
-      url.startsWith("https://imgur.com/") &&
-      url.length > "https://imgur.com/".length
-    ) {
-      const code = url.substring("https://imgur.com/".length);
-      return `https://i.imgur.com/${code}.jpeg`;
-    }
-    return url;
-  }
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -80,18 +109,64 @@ export default function Home() {
     })();
   }, []);
   useEffect(() => {
-    const ProductsView = async () => {
+    async function SeacrhProducts() {
       const { data, error } = await supabase
         .from("Products")
-        .select("*")
-        .order("id", { ascending: false });
-
+        .select("id, Name");
       if (error) console.log(error);
-      if (data) setProducts(data);
+      else setProducts(data || []);
+    }
+    SeacrhProducts();
+  }, []);
+  useEffect(() => {
+    const getRating = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("Ratings")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.log(error);
+      } else {
+        setRating(data);
+      }
+    };
+    getRating();
+  }, [user]);
+  useEffect(() => {
+    const GetUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
     };
 
-    ProductsView();
-  });
+    GetUser();
+  }, []);
+
+  function InputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setQuery(value);
+
+    if (value.trim() === "") {
+      setFilteredProducts([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const matches = products.filter((p) =>
+      p.Name.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredProducts(matches);
+    setShowDropdown(true);
+  }
+
+  function SelectProduct(id: number) {
+    router.push(`/product/${id}`);
+    setQuery("");
+    setShowDropdown(false);
+  }
 
   return (
     <div
@@ -130,7 +205,10 @@ export default function Home() {
               </a>
             </div>
             <div className="flex flex-row gap-5 items-center mr-7">
-              <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+              <div
+                onClick={() => router.push("/Rating")}
+                className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
+              >
                 <div>Rating</div>
                 <Star size={15} />
               </div>
@@ -140,7 +218,7 @@ export default function Home() {
               </div>
               {userEmail === "akidimke136@gmail.com" && (
                 <div
-                  onClick={() => router.push("admin-panel")}
+                  onClick={() => router.push("/admin-panel")}
                   className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
                 >
                   <div className="sm:flex hidden">Admin</div>
@@ -195,7 +273,10 @@ export default function Home() {
                   </a>
                 </div>
                 <div className="flex flex-row gap-5 items-center mr-7">
-                  <div className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2">
+                  <div
+                    onClick={() => router.push("/Rating")}
+                    className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
+                  >
                     <div className="sm:flex hidden">Rating</div>
                     <Star size={15} />
                   </div>
@@ -205,7 +286,7 @@ export default function Home() {
                   </div>
                   {userEmail === "akidimke136@gmail.com" && (
                     <div
-                      onClick={() => router.push("admin-panel")}
+                      onClick={() => router.push("/admin-panel")}
                       className="hover:text-blue-400 hover:underline hover:underline-offset-4 transition-all flex flex-row items-center gap-2"
                     >
                       <div className="sm:flex hidden">Admin</div>
@@ -272,13 +353,55 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <div className="flex flex-row items-center">
-                <div className="border-3 border-neutral-600 h-9 w-10 lg:mb-0 mb-4 flex items-center justify-center rounded-l-md hover:bg-neutral-600 hover:scale-115 hover:shadow-md hover:shadow-neutral-600 transition-all">
-                  <SearchSlash size={20} />
+              <div className="relative w-full max-w-lg mx-auto">
+                <div className="flex">
+                  <button
+                    onClick={() =>
+                      filteredProducts[0] &&
+                      SelectProduct(filteredProducts[0].id)
+                    }
+                    className="border-3 border-neutral-600 h-9 w-10 lg:mb-0 mb-4 flex
+            items-center justify-center rounded-l-md hover:bg-neutral-600
+            hover:scale-115 hover:shadow-md hover:shadow-neutral-600
+            transition-all"
+                  >
+                    <SearchSlash size={15} />
+                  </button>
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={InputChange}
+                    onFocus={() => setShowDropdown(filteredProducts.length > 0)}
+                    onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                    placeholder="Search for your app..."
+                    className="outline-0 border-3 border-neutral-600 rounded-r-md
+            xl:w-[800px] lg:w-[650px] md:w-[550px] sm:w-[450px] w-[350px]
+            lg:mb-0 mb-4 h-9 text-sm indent-1 focus:borer-b-3
+            focus:border-b-blue-400 focus:ring-blue-400 transition-all"
+                  />
                 </div>
-                <input className="outline-0 border-3 border-neutral-600 rounded-r-md xl:w-[800px] lg:w-[650px] md:w-[550px] sm:w-[450px] w-[350px] lg:mb-0 mb-4 h-9 text-sm indent-1 focus:borer-b-3 focus:border-b-blue-400 focus:ring-blue-400 transition-all" />
+
+                {showDropdown && filteredProducts.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-neutral-900 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {filteredProducts.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => SelectProduct(p.id)}
+                        className="px-4 py-2 hover:bg-blue-500 transition-all hover:text-white cursor-pointer flex flex-row items-center gap-2"
+                      >
+                        <div>
+                          <div className="w-24 h-24 bg-neutral-700 flex items-center justify-center text-gray-400 rounded-lg">
+                            {p.Name.slice(0, 2).toUpperCase()}
+                          </div>
+                        </div>
+                        <div>{p.Name}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+
             <div className="hidden lg:flex flex-row items-center gap-5">
               <div className="flex flex-col items-center gap-2">
                 <AnimatePresence>
@@ -332,21 +455,124 @@ export default function Home() {
         </div>
       </div>
       <div>
-        {products.map((product, index) => (
-          <div key={index}>
-            <div>
-              <Image
-                src={convertImgurUrl(product.Image_Url)}
-                alt=""
-                width={50}
-                height={50}
-              />
-              <div>{product.Name}</div>
-              <div>{product.Price}</div>
-              <div>{product.Stock}</div>
-            </div>
+        <div>
+          <div className="m-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost">View Product</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                <Link href="/products" className="cursor-default">
+                  <DropdownMenuLabel>All Products</DropdownMenuLabel>
+                </Link>
+                <DropdownMenuGroup>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Category</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem>
+                          Productivity / Tools
+                          <DropdownMenuShortcut>
+                            <Clipboard size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Social / Communication
+                          <DropdownMenuShortcut>
+                            <MessageCircle size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Entertainment / Media
+                          <DropdownMenuShortcut>
+                            <Film size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Health & Fitness
+                          <DropdownMenuShortcut>
+                            <ActivityIcon size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Finance / Money
+                          <DropdownMenuShortcut>
+                            <CreditCard size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Education / Learning
+                          <DropdownMenuShortcut>
+                            <BookOpen size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Photography / Video
+                          <DropdownMenuShortcut>
+                            <Camera size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Shopping / E-commerce
+                          <DropdownMenuShortcut>
+                            <ShoppingBag size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Travel / Navigation
+                          <DropdownMenuShortcut>
+                            <MapPin size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          News / Magazines
+                          <DropdownMenuShortcut>
+                            <Newspaper size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>More...</DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Platform</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem>
+                          Apple | IOS
+                          <DropdownMenuShortcut>
+                            <Apple size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Android
+                          <DropdownMenuShortcut>
+                            <Cpu size={15} />
+                          </DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>Rating</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem className="flex items-center justify-center">
+                          {ratings.map((rating) => (
+                            <div key={rating.id}>
+                              <div>{rating.rating}</div>
+                            </div>
+                          ))}
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

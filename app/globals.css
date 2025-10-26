@@ -129,3 +129,7 @@ textarea {
   overflow: auto; /* omogućava skrolovanje */
   scrollbar-width: none; /* Firefox */
 }
+
+::-webkit-scrollbar {
+  display: none;
+}
