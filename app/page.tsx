@@ -110,9 +110,7 @@ export default function Home() {
   }, []);
   useEffect(() => {
     async function SeacrhProducts() {
-      const { data, error } = await supabase
-        .from("Products")
-        .select("id, Name");
+      const { data, error } = await supabase.from("Products").select("*");
       if (error) console.log(error);
       else setProducts(data || []);
     }
