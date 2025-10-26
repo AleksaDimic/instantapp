@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Poppins } from "next/font/google";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -29,8 +29,8 @@ interface SaveItems {
   SavesProducts: number;
 }
 
-export default function Home({ params }: { params: { id: number } }) {
-  const { id } = React.use(params);
+export default function Home({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [products, setProducts] = useState<Product[]>([]);
   const [user, setUser] = useState<any>(null);
   const [save, setSave] = useState<SaveItems[]>([]);

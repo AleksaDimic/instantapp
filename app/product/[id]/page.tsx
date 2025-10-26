@@ -55,8 +55,8 @@ interface Cart {
   platform: string;
 }
 
-export default function Home({ params }: { params: { id: number } }) {
-  const { id } = React.use(params);
+export default function Home({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
